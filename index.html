@@ -1,0 +1,626 @@
+<!doctype html>
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<meta name="color-scheme" content="dark">
+	<title>Global Cybersecurity Intelligence Center</title>
+	<style>
+		@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Space+Grotesk:wght@400;500;600;700&display=swap');
+		:root {
+			--bg: #081011; --panel: #0e181a; --panel-2: #132023; --line: #26383b;
+			--text: #eef5f3; --muted: #91a6a3; --green: #54d39b; --red: #ff625f;
+			--orange: #ff9f43; --yellow: #f5cf5b; --blue: #64b5f6; --gray: #a3b2b0;
+			--sidebar: 248px; --radius: 7px;
+		}
+		* { box-sizing: border-box; }
+		html { scroll-behavior: smooth; }
+		body { margin: 0; background: var(--bg); color: var(--text); font-family: "Space Grotesk", sans-serif; }
+		button, input, select { font: inherit; }
+		button, select, input { color: var(--text); background: #101d1f; border: 1px solid var(--line); border-radius: 5px; }
+		button { cursor: pointer; min-height: 36px; padding: 0 12px; font-weight: 600; }
+		button:hover, button:focus-visible, select:focus-visible, input:focus-visible { border-color: var(--green); outline: none; }
+		a { color: var(--blue); }
+		.mono { font-family: "IBM Plex Mono", monospace; }
+		.shell { min-height: 100vh; }
+		aside { position: fixed; inset: 0 auto 0 0; width: var(--sidebar); overflow-y: auto; padding: 22px 14px; background: #0a1416; border-right: 1px solid var(--line); z-index: 20; }
+		.brand { padding: 2px 10px 22px; border-bottom: 1px solid var(--line); }
+		.brand-mark { display: grid; place-items: center; width: 38px; height: 38px; margin-bottom: 12px; background: var(--green); color: #07100f; border-radius: 4px; font: 700 20px "IBM Plex Mono"; }
+		.brand strong { display: block; font-size: 15px; line-height: 1.25; letter-spacing: 0; }
+		.brand small { color: var(--muted); }
+		nav { padding: 14px 0; }
+		nav a { display: flex; gap: 10px; align-items: center; min-height: 39px; padding: 0 10px; color: var(--muted); text-decoration: none; border-left: 2px solid transparent; font-size: 13px; }
+		nav a:hover, nav a.active { color: var(--text); background: #112022; border-left-color: var(--green); }
+		.nav-icon { width: 18px; text-align: center; font-family: "IBM Plex Mono"; color: var(--green); }
+		main { margin-left: var(--sidebar); min-width: 0; }
+		.topbar { position: sticky; top: 0; z-index: 10; min-height: 70px; padding: 12px 26px; display: flex; align-items: center; justify-content: space-between; gap: 18px; background: rgba(8,16,17,.94); backdrop-filter: blur(10px); border-bottom: 1px solid var(--line); }
+		.status-wrap { display: flex; align-items: center; gap: 12px; min-width: 0; }
+		.status-dot { width: 9px; height: 9px; border-radius: 50%; background: var(--gray); box-shadow: 0 0 0 4px rgba(163,178,176,.1); }
+		.status-dot.live { background: var(--green); box-shadow: 0 0 0 4px rgba(84,211,155,.12); }
+		.status-dot.partial { background: var(--yellow); }
+		.status-dot.offline { background: var(--red); }
+		.status-copy strong { display: block; font: 600 13px "IBM Plex Mono"; }
+		.status-copy small { color: var(--muted); }
+		.top-actions { display: flex; align-items: center; gap: 8px; }
+		.primary { background: var(--green); color: #061310; border-color: var(--green); }
+		.icon-button { width: 38px; padding: 0; font-size: 18px; }
+		.mobile-menu { display: none; }
+		.content { padding: 26px; max-width: 1720px; margin: 0 auto; }
+		.intro { display: flex; justify-content: space-between; align-items: end; gap: 24px; padding-bottom: 22px; }
+		h1 { margin: 0 0 7px; font-size: clamp(25px, 3vw, 40px); letter-spacing: 0; line-height: 1.05; }
+		.eyebrow { color: var(--green); font: 600 11px "IBM Plex Mono"; text-transform: uppercase; letter-spacing: .08em; }
+		.intro p { margin: 0; color: var(--muted); max-width: 780px; }
+		.transparency { max-width: 420px; padding-left: 14px; border-left: 2px solid var(--yellow); color: var(--muted); font-size: 12px; line-height: 1.45; }
+		.notice { display: none; margin-bottom: 18px; padding: 11px 14px; border: 1px solid var(--orange); background: rgba(255,159,67,.07); color: #ffd0a3; border-radius: var(--radius); }
+		.notice.show { display: block; }
+		.kpis { display: grid; grid-template-columns: repeat(5, minmax(140px, 1fr)); gap: 12px; margin-bottom: 24px; }
+		.kpi { min-height: 108px; padding: 16px; background: var(--panel); border: 1px solid var(--line); border-top: 3px solid var(--green); border-radius: var(--radius); }
+		.kpi:nth-child(2) { border-top-color: var(--red); } .kpi:nth-child(3) { border-top-color: var(--orange); }
+		.kpi:nth-child(4) { border-top-color: var(--blue); } .kpi:nth-child(5) { border-top-color: var(--yellow); }
+		.kpi span { color: var(--muted); font: 500 11px "IBM Plex Mono"; text-transform: uppercase; }
+		.kpi strong { display: block; margin-top: 8px; font: 600 30px "IBM Plex Mono"; }
+		.dashboard-tabs { position: sticky; top: 70px; z-index: 9; display: grid; grid-template-columns: repeat(6,minmax(145px,1fr)); margin: 0 0 24px; overflow-x: auto; background: var(--bg); border: 1px solid var(--line); border-radius: var(--radius); }
+		.dashboard-tab { min-height: 52px; padding: 8px 10px; display: flex; align-items: center; justify-content: center; gap: 8px; border: 0; border-right: 1px solid var(--line); border-radius: 0; background: var(--panel); color: var(--muted); white-space: nowrap; font-size: 12px; }
+		.dashboard-tab:last-child { border-right: 0; }
+		.dashboard-tab span { color: var(--green); font: 600 11px "IBM Plex Mono"; }
+		.dashboard-tab.active { color: var(--text); background: var(--panel-2); box-shadow: inset 0 -3px var(--green); }
+		.tab-panel { display: none; }
+		.tab-panel.active { display: block; }
+		.section { scroll-margin-top: 88px; margin: 0 0 32px; }
+		.section-head { display: flex; align-items: end; justify-content: space-between; gap: 18px; margin-bottom: 12px; }
+		h2 { margin: 0; font-size: 18px; letter-spacing: 0; }
+		.section-head p { margin: 3px 0 0; color: var(--muted); font-size: 12px; }
+		.workspace { display: grid; grid-template-columns: minmax(0, 1.6fr) minmax(280px, .62fr); gap: 16px; }
+		.panel { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; }
+		.panel-head { min-height: 49px; padding: 11px 14px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--line); }
+		.panel-head h3 { margin: 0; font-size: 14px; }
+		.filters { display: grid; grid-template-columns: 2fr repeat(4, 1fr); gap: 8px; padding: 12px; background: #0b1517; border: 1px solid var(--line); border-radius: var(--radius); margin-bottom: 12px; }
+		.custom-dates { grid-column: 1 / -1; display: none; grid-template-columns: 1fr 1fr; gap: 8px; }
+		.custom-dates.show { display: grid; }
+		input, select { width: 100%; min-height: 38px; padding: 0 10px; }
+		.feed { min-height: 220px; }
+		.feed-item { padding: 15px; border-bottom: 1px solid var(--line); display: grid; grid-template-columns: 4px minmax(0,1fr) auto; gap: 13px; }
+		.feed-item:last-child { border-bottom: 0; }
+		.severity-bar { border-radius: 2px; background: var(--gray); }
+		.severity-bar.critical { background: var(--red); } .severity-bar.high { background: var(--orange); }
+		.severity-bar.medium { background: var(--yellow); } .severity-bar.low { background: var(--blue); }
+		.item-top { display: flex; flex-wrap: wrap; align-items: center; gap: 7px; }
+		.badge { padding: 3px 6px; border: 1px solid var(--line); border-radius: 3px; font: 600 10px "IBM Plex Mono"; text-transform: uppercase; color: var(--gray); }
+		.badge.critical { color: var(--red); border-color: rgba(255,98,95,.45); } .badge.high { color: var(--orange); }
+		.badge.medium { color: var(--yellow); } .badge.low, .badge.advisory { color: var(--blue); }
+		.badge.official { color: var(--green); } .badge.reported { color: var(--yellow); }
+		.feed-item h4 { margin: 8px 0 4px; font-size: 15px; line-height: 1.35; }
+		.feed-item p { margin: 0; color: var(--muted); font-size: 12px; line-height: 1.45; display: -webkit-box; line-clamp: 2; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+		.meta { margin-top: 9px; display: flex; flex-wrap: wrap; gap: 11px; color: var(--muted); font: 11px "IBM Plex Mono"; }
+		.source-link { align-self: center; text-decoration: none; border: 1px solid var(--line); border-radius: 4px; padding: 8px; white-space: nowrap; font: 600 11px "IBM Plex Mono"; }
+		.side-stack { display: grid; gap: 16px; align-content: start; }
+		.source-row, .quality-row, .alert-row { padding: 11px 13px; display: flex; justify-content: space-between; gap: 12px; border-bottom: 1px solid var(--line); font-size: 12px; }
+		.source-row:last-child, .quality-row:last-child { border-bottom: 0; }
+		.health { font-family: "IBM Plex Mono"; } .health.ok { color: var(--green); } .health.fail { color: var(--red); } .health.idle { color: var(--gray); }
+		.source-detail { display: block; margin-top: 4px; color: var(--muted); font-size: 10px; max-width: 240px; overflow-wrap: anywhere; }
+		.alert-row { display: block; border-left: 3px solid var(--red); }
+		.alert-row strong { font-size: 12px; } .alert-row small { display: block; color: var(--muted); margin-top: 4px; }
+		.empty { padding: 32px 20px; text-align: center; color: var(--muted); }
+		.table-wrap { overflow-x: auto; }
+		table { width: 100%; border-collapse: collapse; font-size: 12px; }
+		th { color: var(--muted); font: 500 10px "IBM Plex Mono"; text-transform: uppercase; text-align: left; background: #0b1517; }
+		th, td { padding: 11px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+		td:first-child { font-family: "IBM Plex Mono"; color: var(--blue); }
+		.pager { padding: 10px 12px; display: flex; justify-content: space-between; align-items: center; }
+		.pager span { color: var(--muted); font-size: 11px; }
+		.timeline { display: flex; gap: 8px; overflow-x: auto; padding: 16px; }
+		.day { flex: 1 0 105px; min-height: 86px; padding: 11px; text-align: left; background: #101c1e; }
+		.day strong { display: block; margin: 8px 0 3px; font: 600 20px "IBM Plex Mono"; }
+		.day small { color: var(--muted); }
+		.day.active { border-color: var(--green); background: rgba(84,211,155,.07); }
+		.map-grid { display: grid; grid-template-columns: minmax(0,1fr) 300px; }
+		.map { min-height: 280px; position: relative; display: grid; place-items: center; background-color: #0a1517; background-image: linear-gradient(rgba(84,211,155,.05) 1px, transparent 1px), linear-gradient(90deg, rgba(84,211,155,.05) 1px, transparent 1px); background-size: 32px 32px; }
+		.map canvas { max-width: 100%; }
+		.map-note { text-align: center; color: var(--muted); max-width: 440px; padding: 20px; }
+		.settings-grid { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 15px; padding: 16px; }
+		.setting label { display: block; margin-bottom: 7px; font-size: 12px; color: var(--muted); }
+		.check { display: flex; gap: 8px; align-items: center; padding: 7px 0; font-size: 12px; }
+		.check input { width: 16px; min-height: 16px; accent-color: var(--green); }
+		.export-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+		.init-overlay { position: fixed; inset: 0; z-index: 100; display: grid; place-items: center; background: #071012; }
+		.init-overlay.hidden { display: none; }
+		.init-box { width: min(520px, calc(100% - 36px)); padding: 25px; border: 1px solid var(--line); background: var(--panel); }
+		.init-box h2 { font: 600 18px "IBM Plex Mono"; color: var(--green); }
+		.init-progress-head { display: flex; justify-content: space-between; gap: 16px; margin-top: 20px; color: var(--muted); font: 11px "IBM Plex Mono"; }
+		.init-progress-head strong { color: var(--text); font-size: 14px; }
+		.init-progress { width: 100%; height: 8px; margin-top: 8px; border: 0; border-radius: 2px; overflow: hidden; background: var(--line); appearance: none; }
+		.init-progress::-webkit-progress-bar { background: var(--line); }
+		.init-progress::-webkit-progress-value { background: var(--green); transition: width .2s ease; }
+		.init-progress::-moz-progress-bar { background: var(--green); }
+		.init-list { margin-top: 18px; display: grid; gap: 9px; color: var(--muted); font: 12px "IBM Plex Mono"; }
+		.init-line { display: flex; justify-content: space-between; }
+		.init-line .available { color: var(--green); }
+		.init-line .failed { color: var(--red); }
+		.init-line .connecting { color: var(--yellow); }
+		footer { margin-left: var(--sidebar); padding: 28px; border-top: 1px solid var(--line); color: var(--muted); font-size: 11px; line-height: 1.7; }
+		@media (max-width: 1080px) { .kpis { grid-template-columns: repeat(3, 1fr); } .workspace { grid-template-columns: 1fr; } .side-stack { grid-template-columns: 1fr 1fr; } .filters { grid-template-columns: 2fr 1fr 1fr; } }
+		@media (max-width: 760px) {
+			aside { visibility: hidden; transform: translateX(-100%); transition: transform .2s, visibility 0s linear .2s; box-shadow: 12px 0 30px rgba(0,0,0,.45); } aside.open { visibility: visible; transform: none; transition-delay: 0s; }
+			main, footer { margin-left: 0; } .mobile-menu { display: block; } .topbar { padding: 10px 14px; }
+			.top-actions select, .top-actions .label-hide { display: none; } .content { padding: 18px 13px; }
+			.intro { display: block; } .transparency { margin-top: 14px; } .kpis { grid-template-columns: repeat(2, 1fr); }
+			.kpi:last-child { grid-column: span 2; } .filters { grid-template-columns: 1fr 1fr; } .filters input { grid-column: span 2; }
+			.side-stack { grid-template-columns: 1fr; } .feed-item { grid-template-columns: 4px minmax(0,1fr); }
+			.source-link { grid-column: 2; justify-self: start; } .map-grid { grid-template-columns: 1fr; } .settings-grid { grid-template-columns: 1fr; }
+			.dashboard-tabs { top: 59px; display: flex; margin-bottom: 18px; scroll-snap-type: x mandatory; }
+			.dashboard-tab { flex: 0 0 auto; min-width: 164px; scroll-snap-align: start; }
+		}
+	</style>
+</head>
+<body>
+	<div class="init-overlay" id="initOverlay" role="status" aria-live="polite">
+		<div class="init-box"><h2>INITIALIZING CYBER INTELLIGENCE...</h2><div class="init-progress-head"><span id="initStage">Preparing local intelligence store</span><strong id="initPercent">1%</strong></div><progress class="init-progress" id="initProgress" value="1" max="100">1%</progress><div class="init-list" id="initList"><div class="init-line"><span>Loading historical records</span><span class="connecting">CONNECTING</span></div></div></div>
+	</div>
+	<div class="shell">
+		<aside id="sidebar">
+			<div class="brand"><div class="brand-mark">GC</div><strong>GLOBAL CYBERSECURITY<br>INTELLIGENCE CENTER</strong><small>Public-source intelligence</small></div>
+			<nav id="nav">
+				<a href="#overview" class="active"><span class="nav-icon">01</span>GLOBAL OVERVIEW</a>
+				<a href="#live-feed"><span class="nav-icon">02</span>LIVE FEED</a>
+				<a href="#vulnerabilities"><span class="nav-icon">03</span>VULNERABILITIES</a>
+				<a href="#exploited"><span class="nav-icon">04</span>EXPLOITED VULNERABILITIES</a>
+				<a href="#incidents"><span class="nav-icon">05</span>SECURITY INCIDENTS</a>
+				<a href="#threats"><span class="nav-icon">06</span>THREAT INTELLIGENCE</a>
+				<a href="#advisories"><span class="nav-icon">07</span>ADVISORIES</a>
+				<a href="#timeline"><span class="nav-icon">08</span>TIMELINE</a>
+				<a href="#global-map"><span class="nav-icon">09</span>GLOBAL MAP</a>
+				<a href="#sources"><span class="nav-icon">10</span>SOURCES</a>
+				<a href="#data-quality"><span class="nav-icon">11</span>DATA QUALITY</a>
+				<a href="#settings"><span class="nav-icon">12</span>SETTINGS</a>
+			</nav>
+		</aside>
+		<main>
+			<header class="topbar">
+				<div class="status-wrap"><button class="icon-button mobile-menu" id="menuButton" aria-label="Open navigation">☰</button><span class="status-dot" id="statusDot"></span><div class="status-copy"><strong id="liveStatus">INITIALIZING</strong><small id="syncStatus">Loading stored intelligence...</small></div></div>
+				<div class="top-actions"><span class="mono label-hide" id="sourceCount">0 / 0 sources</span><select id="refreshInterval" aria-label="Refresh interval"><option value="60000">1 min</option><option value="300000" selected>5 min</option><option value="900000">15 min</option><option value="1800000">30 min</option><option value="3600000">1 hour</option><option value="0">Manual</option></select><button class="primary" id="refreshButton">↻ REFRESH NOW</button></div>
+			</header>
+			<div class="content">
+				<section class="intro" id="overview"><div><div class="eyebrow">Operational intelligence workspace</div><h1>Global cyber risk, in context.</h1><p>Live Global Cybersecurity Intelligence Aggregated From Available Public Sources</p></div><div class="transparency">This dashboard aggregates publicly accessible cybersecurity intelligence. Coverage depends on source availability, publication delays, API limits, and source accuracy. Absence of an event does not mean absence of an attack.</div></section>
+				<div class="notice" id="offlineNotice">OFFLINE — Showing previously collected intelligence. No source data has been discarded.</div>
+				<section class="kpis" aria-label="Key metrics">
+					<article class="kpi"><span>New Today</span><strong id="kpiToday">0</strong></article><article class="kpi"><span>Critical CVEs</span><strong id="kpiCritical">0</strong></article><article class="kpi"><span>CISA KEV</span><strong id="kpiKev">0</strong></article><article class="kpi"><span>Incidents</span><strong id="kpiIncidents">0</strong></article><article class="kpi"><span>Active Sources</span><strong id="kpiSources">0 / 0</strong></article>
+				</section>
+				<div class="dashboard-tabs" id="dashboardTabs" role="tablist" aria-label="Intelligence dashboard views">
+					<button class="dashboard-tab active" role="tab" aria-selected="true" data-tab="live"><span>01</span>Live Intelligence</button>
+					<button class="dashboard-tab" role="tab" aria-selected="false" data-tab="incidents"><span>02</span>Incidents & Breaches</button>
+					<button class="dashboard-tab" role="tab" aria-selected="false" data-tab="vulnerabilities"><span>03</span>Vulnerabilities</button>
+					<button class="dashboard-tab" role="tab" aria-selected="false" data-tab="advisories"><span>04</span>Advisories & Threats</button>
+					<button class="dashboard-tab" role="tab" aria-selected="false" data-tab="history"><span>05</span>Timeline & Map</button>
+					<button class="dashboard-tab" role="tab" aria-selected="false" data-tab="operations"><span>06</span>Sources & Settings</button>
+				</div>
+				<section class="section tab-panel active" data-tab-panel="live" id="live-feed">
+					<div class="section-head"><div><h2>Live Security Feed</h2><p>Newest source-published or source-updated records first</p></div><div class="export-actions"><button id="exportFiltered">⇩ CSV</button><button id="exportJson">⇩ JSON</button></div></div>
+					  <div class="filters"><input id="searchInput" type="search" placeholder="Search CVE, vendor, product, source, description..." aria-label="Global search"><select id="categoryFilter"><option value="">All categories</option></select><select id="severityFilter"><option value="">All severity</option><option>Critical</option><option>High</option><option>Medium</option><option>Low</option><option>Unknown</option></select><select id="sourceFilter"><option value="">All sources</option></select><select id="dateFilter"><option value="">All dates</option><option value="hour">Last hour</option><option value="today">Today</option><option value="7">Last 7 days</option><option value="30">Last 30 days</option><option value="custom">Custom range</option></select><select id="regionFilter"><option value="">All countries / regions</option></select><div class="custom-dates" id="customDates"><input id="dateFrom" type="date" aria-label="Custom date from"><input id="dateTo" type="date" aria-label="Custom date to"></div></div>
+					<div class="workspace"><div class="panel"><div class="feed" id="feed"></div><div class="pager"><button id="feedPrev">←</button><span id="feedPage">Page 1</span><button id="feedNext">→</button></div></div><div class="side-stack"><div class="panel"><div class="panel-head"><h3>Priority Alerts</h3><span class="badge critical">RULE-BASED</span></div><div id="alerts"></div></div><div class="panel"><div class="panel-head"><h3>Source Health</h3><a href="#sources">Details</a></div><div id="sourceHealthMini"></div></div></div></div>
+				</section>
+				<section class="section tab-panel" data-tab-panel="incidents" id="incidents"><div class="section-head"><div><h2>Security Incidents</h2><p>Officially disclosed and publicly reported incidents, clearly labeled</p></div></div><div class="panel"><div class="empty" id="incidentFeed">No incident source has supplied records.</div></div></section>
+				<section class="section tab-panel" data-tab-panel="vulnerabilities" id="exploited"><div class="section-head"><div><h2>Exploited Vulnerabilities</h2><p>CISA Known Exploited Vulnerabilities; inclusion indicates evidence of active exploitation</p></div></div><div class="panel"><div class="feed" id="kevFeed"></div></div></section>
+				<section class="section tab-panel" data-tab-panel="vulnerabilities" id="vulnerabilities"><div class="section-head"><div><h2>Vulnerability Explorer</h2><p>Correlated vulnerability records with original provenance</p></div></div><div class="panel"><div class="table-wrap"><table><thead><tr><th>CVE</th><th>Severity / CVSS</th><th>Vendor / Product</th><th>Published / Modified</th><th>Known Exploited</th><th>Sources</th></tr></thead><tbody id="vulnerabilityRows"></tbody></table></div><div class="pager"><button id="vulnPrev">←</button><span id="vulnPage">Page 1</span><button id="vulnNext">→</button></div></div></section>
+				<section class="section tab-panel" data-tab-panel="advisories" id="advisories"><div class="section-head"><div><h2>Security Advisories</h2><p>Official vendor and government advisory sources</p></div></div><div class="panel"><div class="empty" id="advisoryFeed">No advisory source has supplied records.</div></div></section>
+				<section class="section tab-panel" data-tab-panel="advisories" id="threats"><div class="section-head"><div><h2>Threat Intelligence</h2><p>Public indicators are evidence artifacts, not proof an organization was attacked</p></div></div><div class="panel"><div class="empty" id="threatFeed">No accessible threat-intelligence adapter is enabled. API-key feeds require a backend proxy.</div></div></section>
+				<section class="section tab-panel" data-tab-panel="history" id="timeline"><div class="section-head"><div><h2>Historical Timeline</h2><p>Click a date to filter the live feed</p></div><button id="clearTimeline">Clear date filter</button></div><div class="panel"><div class="timeline" id="timelineDays"></div></div></section>
+				<section class="section tab-panel" data-tab-panel="history" id="global-map"><div class="section-head"><div><h2>Global Threat Map</h2><p>Only source-supplied geographic facts are eligible for plotting</p></div></div><div class="panel map-grid"><div class="map"><canvas id="mapCanvas" width="900" height="400" aria-label="Geographic event plot"></canvas><div class="map-note" id="mapNote">Location: Unknown. Current sources do not provide reliable event coordinates, so no attack locations are plotted.</div></div><div id="regionList"><div class="empty">No verified geographic records available.</div></div></div></section>
+				<section class="section tab-panel" data-tab-panel="operations" id="sources"><div class="section-head"><div><h2>Source Health</h2><p>Failures remain visible; stored records remain available</p></div></div><div class="panel"><div class="table-wrap"><table><thead><tr><th>Source</th><th>Region</th><th>Status</th><th>Last success</th><th>Last failure</th><th>Records</th><th>HTTP / Error</th></tr></thead><tbody id="sourceRows"></tbody></table></div></div></section>
+				<section class="section tab-panel" data-tab-panel="operations" id="data-quality"><div class="section-head"><div><h2>Data Quality</h2><p>Measured from local persistence and refresh history</p></div></div><div class="panel"><div id="qualityRows"></div></div></section>
+				<section class="section tab-panel" data-tab-panel="operations" id="settings"><div class="section-head"><div><h2>Settings & Data</h2><p>Stored locally in this browser; no credentials are embedded</p></div></div><div class="panel settings-grid"><div class="setting"><label>Refresh interval</label><select id="settingsInterval"><option value="60000">1 minute</option><option value="300000" selected>5 minutes</option><option value="900000">15 minutes</option><option value="1800000">30 minutes</option><option value="3600000">1 hour</option><option value="0">Manual only</option></select></div><div class="setting"><label>Priority alert rules</label><label class="check"><input type="checkbox" id="alertCritical" checked> Critical severity</label><label class="check"><input type="checkbox" id="alertKev" checked> CISA KEV</label><label class="check"><input type="checkbox" id="alertZeroDay"> Zero-day tag</label><input id="alertTerms" type="search" placeholder="Vendor or product terms" aria-label="Alert vendor or product terms"></div><div class="setting"><label>Export all retained intelligence</label><div class="export-actions"><button id="exportAllCsv">CSV</button><button id="exportAllJson">JSON</button></div></div></div></section>
+			</div>
+		</main>
+		<footer><strong>GLOBAL CYBERSECURITY INTELLIGENCE CENTER</strong><br>Public-source intelligence aggregation<br>Data is provided for security awareness and research. Source availability, publication delays, and source accuracy may affect coverage.<br>Last synchronization: <span id="footerSync">Not available</span></footer>
+	</div>
+	<script>
+		'use strict';
+
+		const SOURCES = {
+			cisaKev: { name: 'CISA KEV', type: 'json', enabled: true, endpoint: 'https://www.cisa.gov/sites/default/files/feeds/known_exploited_vulnerabilities.json', category: 'Exploited Vulnerability', region: 'United States', adapter: 'cisaKev' },
+			nvd: { name: 'NVD', type: 'api', enabled: true, endpoint: 'https://services.nvd.nist.gov/rest/json/cves/2.0', category: 'Vulnerability', region: 'United States', adapter: 'nvd' },
+			cveOrg: { name: 'CVE.org', type: 'api', enabled: false, endpoint: 'https://cveawg.mitre.org/api/cve', category: 'Vulnerability', region: 'Global', reason: 'No browser-safe bulk recent-record endpoint configured' },
+			cisaAlerts: { name: 'CISA Cybersecurity Alerts', type: 'feed', enabled: true, endpoint: 'https://www.cisa.gov/cybersecurity-advisories/all.xml', category: 'Security Advisory', region: 'United States', adapter: 'rss', official: true, maxRecords: 100, minIntervalMs: 900000 },
+			darkReading: { name: 'Dark Reading', type: 'feed', enabled: true, endpoint: 'https://www.darkreading.com/rss.xml', category: 'Security News', region: 'Global', adapter: 'rss', maxRecords: 50, minIntervalMs: 900000 },
+			theHackerNews: { name: 'The Hacker News', type: 'feed', enabled: false, endpoint: 'https://feeds.feedburner.com/TheHackersNews', category: 'Security News', region: 'Global', reason: 'Official feed returned HTTP 403 to direct browser requests; backend proxy required' },
+			krebsOnSecurity: { name: 'KrebsOnSecurity', type: 'feed', enabled: true, endpoint: 'https://krebsonsecurity.com/feed/', category: 'Security News', region: 'Global', adapter: 'rss', maxRecords: 30, minIntervalMs: 900000 },
+			bleepingComputer: { name: 'BleepingComputer', type: 'feed', enabled: true, endpoint: 'https://www.bleepingcomputer.com/feed/', category: 'Security News', region: 'Global', adapter: 'rss', maxRecords: 50, minIntervalMs: 900000 },
+			certEu: { name: 'CERT-EU', type: 'feed', enabled: false, endpoint: 'https://cert.europa.eu/publications/security-advisories-rss', category: 'Security Advisory', region: 'European Union', reason: 'Structured browser endpoint not verified' },
+			certIn: { name: 'CERT-In', type: 'web', enabled: false, endpoint: 'https://www.cert-in.org.in/', category: 'Security Advisory', region: 'India', reason: 'No verified structured feed; website scraping is intentionally disabled' },
+			ncscUk: { name: 'NCSC UK', type: 'feed', enabled: false, endpoint: 'https://www.ncsc.gov.uk/api/1/services/v1/report-rss-feed.xml', category: 'Security Advisory', region: 'United Kingdom', reason: 'Direct browser CORS access not verified' },
+			microsoft: { name: 'Microsoft Security', type: 'api', enabled: false, endpoint: 'https://api.msrc.microsoft.com/', category: 'Security Advisory', region: 'Global', reason: 'API requires terms-aware integration and headers' },
+			cisco: { name: 'Cisco Security', type: 'api', enabled: false, endpoint: 'https://apix.cisco.com/security/advisories/v2', category: 'Security Advisory', region: 'Global', reason: 'API authentication required; use a backend proxy' },
+			apple: { name: 'Apple Security', type: 'web', enabled: false, endpoint: 'https://support.apple.com/en-us/100100', category: 'Security Advisory', region: 'Global', reason: 'No browser-safe structured feed configured' },
+			google: { name: 'Google Security', type: 'feed', enabled: false, endpoint: 'https://security.googleblog.com/feeds/posts/default', category: 'Security Advisory', region: 'Global', reason: 'Cross-origin Atom access not verified' },
+			aws: { name: 'Amazon AWS Security', type: 'feed', enabled: false, endpoint: 'https://aws.amazon.com/security/security-bulletins/rss/feed/', category: 'Security Advisory', region: 'Global', reason: 'Cross-origin RSS access not verified' },
+			redHat: { name: 'Red Hat Security', type: 'api', enabled: false, endpoint: 'https://access.redhat.com/hydra/rest/securitydata/cve.json', category: 'Security Advisory', region: 'Global', reason: 'Adapter not enabled until browser CORS behavior is verified' },
+			ubuntu: { name: 'Ubuntu Security', type: 'api', enabled: false, endpoint: 'https://ubuntu.com/security/cves.json', category: 'Security Advisory', region: 'Global', reason: 'Adapter not enabled until browser CORS behavior is verified' },
+			debian: { name: 'Debian Security', type: 'feed', enabled: false, endpoint: 'https://www.debian.org/security/dsa', category: 'Security Advisory', region: 'Global', reason: 'No browser-safe structured feed configured' },
+			oracle: { name: 'Oracle Security', type: 'web', enabled: false, endpoint: 'https://www.oracle.com/security-alerts/', category: 'Security Advisory', region: 'Global', reason: 'No browser-safe structured feed configured' },
+			broadcom: { name: 'VMware / Broadcom', type: 'web', enabled: false, endpoint: 'https://support.broadcom.com/security-advisories', category: 'Security Advisory', region: 'Global', reason: 'No browser-safe structured feed configured' },
+			fortinet: { name: 'Fortinet PSIRT', type: 'web', enabled: false, endpoint: 'https://www.fortiguard.com/psirt', category: 'Security Advisory', region: 'Global', reason: 'No browser-safe structured feed configured' },
+			paloAlto: { name: 'Palo Alto Networks', type: 'web', enabled: false, endpoint: 'https://security.paloaltonetworks.com/', category: 'Security Advisory', region: 'Global', reason: 'No browser-safe bulk feed configured' },
+			github: { name: 'GitHub Advisories', type: 'api', enabled: false, endpoint: 'https://api.github.com/advisories', category: 'Security Advisory', region: 'Global', reason: 'Unauthenticated rate limits unsuitable for automatic polling' },
+			urlhaus: { name: 'URLhaus', type: 'api', enabled: false, endpoint: 'https://urlhaus-api.abuse.ch/', category: 'IOC', region: 'Global', reason: 'Authentication token required; use a backend proxy' },
+			malwareBazaar: { name: 'MalwareBazaar', type: 'api', enabled: false, endpoint: 'https://mb-api.abuse.ch/api/v1/', category: 'Malware', region: 'Global', reason: 'Authentication token required; use a backend proxy' },
+			otx: { name: 'AlienVault OTX', type: 'api', enabled: false, endpoint: 'https://otx.alienvault.com/api/v1/', category: 'IOC', region: 'Global', reason: 'API key required; never embed keys in this file' },
+			shodan: { name: 'Shodan', type: 'api', enabled: false, endpoint: 'https://api.shodan.io/', category: 'IOC', region: 'Global', reason: 'API key and backend proxy required; credentials are never embedded in HTML' },
+			virusTotal: { name: 'VirusTotal', type: 'api', enabled: false, endpoint: 'https://www.virustotal.com/api/v3/', category: 'IOC', region: 'Global', reason: 'API key and backend proxy required; credentials are never embedded in HTML' }
+		};
+
+		const DB_NAME = 'globalCyberIntelligence';
+		const DB_VERSION = 2;
+		const PAGE_SIZE = 30;
+		const state = { db: null, events: [], health: {}, refreshes: [], filtered: [], feedPage: 0, vulnPage: 0, selectedDay: '', timer: null, nextAt: 0, refreshing: false, duplicateCount: 0 };
+		const TAB_TARGETS = { live: 'live-feed', incidents: 'incidents', vulnerabilities: 'exploited', advisories: 'advisories', history: 'timeline', operations: 'sources' };
+		const SECTION_TABS = { 'live-feed': 'live', incidents: 'incidents', vulnerabilities: 'vulnerabilities', exploited: 'vulnerabilities', threats: 'advisories', advisories: 'advisories', timeline: 'history', 'global-map': 'history', sources: 'operations', 'data-quality': 'operations', settings: 'operations' };
+		const byId = id => document.getElementById(id);
+		const safeDate = value => { const date = value ? new Date(value) : null; return date && !Number.isNaN(date.getTime()) ? date : null; };
+		const iso = value => safeDate(value)?.toISOString() || '';
+		const displayDate = value => safeDate(value)?.toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' }) || 'Not available';
+		const eventTime = event => safeDate(event.updatedAt || event.publishedAt || event.observedAt || event.discoveredAt || event.fetchedAt)?.getTime() || 0;
+		const todayKey = date => new Intl.DateTimeFormat('en-CA', { year: 'numeric', month: '2-digit', day: '2-digit' }).format(date);
+		const clean = value => typeof value === 'string' ? value.trim() : '';
+		const normalizeSeverity = value => ['critical','high','medium','low'].includes(clean(value).toLowerCase()) ? clean(value).toLowerCase().replace(/^./, char => char.toUpperCase()) : 'Unknown';
+		const uid = text => { let hash = 2166136261; for (let i = 0; i < text.length; i++) { hash ^= text.charCodeAt(i); hash = Math.imul(hash, 16777619); } return (hash >>> 0).toString(16); };
+		const textValue = value => clean(value) || 'Not available';
+		const addText = (parent, tag, text, className) => { const node = document.createElement(tag); node.textContent = text; if (className) node.className = className; parent.appendChild(node); return node; };
+
+		function openDatabase() {
+			return new Promise((resolve, reject) => {
+				const request = indexedDB.open(DB_NAME, DB_VERSION);
+				request.onupgradeneeded = () => {
+					const db = request.result;
+					if (!db.objectStoreNames.contains('events')) db.createObjectStore('events', { keyPath: 'id' });
+					  if (!db.objectStoreNames.contains('vulnerabilities')) db.createObjectStore('vulnerabilities', { keyPath: 'id' });
+					  if (!db.objectStoreNames.contains('incidents')) db.createObjectStore('incidents', { keyPath: 'id' });
+					  if (!db.objectStoreNames.contains('advisories')) db.createObjectStore('advisories', { keyPath: 'id' });
+					  if (!db.objectStoreNames.contains('threatIndicators')) db.createObjectStore('threatIndicators', { keyPath: 'id' });
+					if (!db.objectStoreNames.contains('eventVersions')) db.createObjectStore('eventVersions', { keyPath: 'versionId' });
+					if (!db.objectStoreNames.contains('sources')) db.createObjectStore('sources', { keyPath: 'id' });
+					if (!db.objectStoreNames.contains('refreshHistory')) db.createObjectStore('refreshHistory', { keyPath: 'id', autoIncrement: true });
+				};
+				request.onsuccess = () => resolve(request.result);
+				request.onerror = () => reject(request.error);
+			});
+		}
+
+		function storeAll(name) {
+			return new Promise((resolve, reject) => { const request = state.db.transaction(name).objectStore(name).getAll(); request.onsuccess = () => resolve(request.result); request.onerror = () => reject(request.error); });
+		}
+
+		function putMany(storeName, values) {
+			if (!values.length) return Promise.resolve();
+			return new Promise((resolve, reject) => { const transaction = state.db.transaction(storeName, 'readwrite'); const store = transaction.objectStore(storeName); values.forEach(value => store.put(value)); transaction.oncomplete = resolve; transaction.onerror = () => reject(transaction.error); });
+		}
+
+		function addRefresh(value) {
+			return new Promise((resolve, reject) => { const transaction = state.db.transaction('refreshHistory', 'readwrite'); transaction.objectStore('refreshHistory').add(value); transaction.oncomplete = resolve; transaction.onerror = () => reject(transaction.error); });
+		}
+
+		function baseRecord(data, sourceKey, fetchedAt) {
+			const source = SOURCES[sourceKey];
+			return {
+				id: data.id, sourceKey, source: source.name, sourceUrl: data.sourceUrl || source.endpoint, category: data.category || source.category,
+				title: clean(data.title), description: clean(data.description), severity: normalizeSeverity(data.severity), confidence: clean(data.confidence),
+				status: clean(data.status), cve: clean(data.cve), cwe: clean(data.cwe), cvss: data.cvss ?? '', vendor: clean(data.vendor), product: clean(data.product),
+				affectedVersions: Array.isArray(data.affectedVersions) ? data.affectedVersions : [], threatActor: clean(data.threatActor), malwareFamily: clean(data.malwareFamily),
+				location: clean(data.location), country: clean(data.country), region: clean(data.region),
+				latitude: Number.isFinite(data.latitude) ? data.latitude : null, longitude: Number.isFinite(data.longitude) ? data.longitude : null,
+				publishedAt: iso(data.publishedAt), discoveredAt: iso(data.discoveredAt), observedAt: iso(data.observedAt),
+				updatedAt: iso(data.updatedAt), fetchedAt, firstSeenByDashboard: fetchedAt, lastSeenByDashboard: fetchedAt, tags: Array.isArray(data.tags) ? data.tags : [],
+				relatedEvents: [], rawSourceId: clean(data.rawSourceId), sources: [{ name: source.name, url: data.sourceUrl || source.endpoint, fetchedAt }], knownExploited: Boolean(data.knownExploited),
+				dueDate: iso(data.dueDate), ransomwareUse: clean(data.ransomwareUse), versions: []
+			};
+		}
+
+		function metricFromCve(cve) {
+			const metrics = cve.metrics || {};
+			const candidates = [...(metrics.cvssMetricV40 || []), ...(metrics.cvssMetricV31 || []), ...(metrics.cvssMetricV30 || []), ...(metrics.cvssMetricV2 || [])];
+			const primary = candidates.find(item => item.type === 'Primary') || candidates[0];
+			return primary ? { score: primary.cvssData?.baseScore ?? '', severity: primary.cvssData?.baseSeverity || primary.baseSeverity || '' } : { score: '', severity: '' };
+		}
+
+		function parseNvd(payload, fetchedAt) {
+			if (!payload || !Array.isArray(payload.vulnerabilities)) throw new Error('Unexpected NVD response schema');
+			return payload.vulnerabilities.map(wrapper => {
+				const cve = wrapper.cve || {}; const id = clean(cve.id); const metric = metricFromCve(cve);
+				const description = cve.descriptions?.find(item => item.lang === 'en')?.value || '';
+				const cwes = (cve.weaknesses || []).flatMap(item => item.description || []).filter(item => item.lang === 'en').map(item => item.value);
+				const affected = (cve.configurations || []).flatMap(config => config.nodes || []).flatMap(node => node.cpeMatch || []).filter(item => item.vulnerable).map(item => item.criteria);
+				return baseRecord({ id: id || `nvd-${uid(JSON.stringify(cve))}`, rawSourceId: id, cve: id, title: id ? `${id}: ${description.slice(0, 140)}` : description.slice(0, 140), description, severity: metric.severity, cvss: metric.score, cwe: cwes.join(', '), affectedVersions: affected, publishedAt: cve.published, updatedAt: cve.lastModified, status: 'Officially Disclosed', confidence: 'Verified / Official', tags: ['NVD'], sourceUrl: id ? `https://nvd.nist.gov/vuln/detail/${encodeURIComponent(id)}` : SOURCES.nvd.endpoint }, 'nvd', fetchedAt);
+			}).filter(item => item.title);
+		}
+
+		function parseCisaKev(payload, fetchedAt) {
+			if (!payload || !Array.isArray(payload.vulnerabilities)) throw new Error('Unexpected CISA KEV response schema');
+			return payload.vulnerabilities.map(item => {
+				const cve = clean(item.cveID); const name = clean(item.vulnerabilityName);
+				return baseRecord({ id: cve || `cisa-kev-${uid(JSON.stringify(item))}`, rawSourceId: cve, cve, title: name || cve, description: clean(item.shortDescription), severity: 'Unknown', vendor: clean(item.vendorProject), product: clean(item.product), publishedAt: item.dateAdded, updatedAt: payload.dateReleased, dueDate: item.dueDate, ransomwareUse: clean(item.knownRansomwareCampaignUse), status: 'Officially Disclosed', confidence: 'Verified / Official', knownExploited: true, category: 'Exploited Vulnerability', tags: ['CISA KEV', ...(item.knownRansomwareCampaignUse === 'Known' ? ['Ransomware'] : [])], sourceUrl: 'https://www.cisa.gov/known-exploited-vulnerabilities-catalog' }, 'cisaKev', fetchedAt);
+			}).filter(item => item.title);
+		}
+
+		function feedNodeText(node, names) {
+			for (const name of names) {
+				const child = [...node.children].find(item => item.localName?.toLowerCase() === name.toLowerCase());
+				if (child) return clean(child.textContent);
+			}
+			return '';
+		}
+
+		function plainFeedText(value) {
+			const documentFragment = new DOMParser().parseFromString(value || '', 'text/html');
+			return clean(documentFragment.body.textContent).replace(/\s+/g, ' ');
+		}
+
+		function safeSourceUrl(value, fallback) {
+			try { const url = new URL(value); return ['http:','https:'].includes(url.protocol) ? url.href : fallback; }
+			catch { return fallback; }
+		}
+
+		function classifyNews(text, fallback) {
+			const value = text.toLowerCase();
+			if (/zero[ -]?day/.test(value)) return 'Zero-Day';
+			if (/data breach|data leak|breached/.test(value)) return 'Data Breach';
+			if (/ransomware/.test(value)) return 'Ransomware';
+			if (/malware|trojan|infostealer|botnet/.test(value)) return 'Malware';
+			if (/cve-\d{4}-\d+|vulnerabilit|security flaw/.test(value)) return 'Vulnerability';
+			if (/cyberattack|cyber attack|intrusion|compromis/.test(value)) return 'Incident';
+			return fallback;
+		}
+
+		function parseRss(xml, sourceKey, fetchedAt) {
+			const source = SOURCES[sourceKey]; const documentFeed = new DOMParser().parseFromString(xml, 'application/xml');
+			if (documentFeed.querySelector('parsererror')) throw new Error('Invalid XML feed response');
+			const items = [...documentFeed.querySelectorAll('item, entry')].slice(0, source.maxRecords || 100);
+			if (!items.length) throw new Error('Feed contained no entries');
+			return items.map(item => {
+				const title = plainFeedText(feedNodeText(item,['title'])); const description = plainFeedText(feedNodeText(item,['description','summary','content']));
+				const linkNode = [...item.children].find(child => child.localName?.toLowerCase() === 'link');
+				const link = safeSourceUrl(linkNode?.getAttribute('href') || clean(linkNode?.textContent),source.endpoint);
+				const rawId = feedNodeText(item,['guid','id']) || link; const published = feedNodeText(item,['pubdate','published','date']); const updated = feedNodeText(item,['updated']);
+				const cves = `${title} ${description}`.match(/CVE-\d{4}-\d{4,}/gi) || []; const cve = cves[0]?.toUpperCase() || '';
+				return baseRecord({ id: rawId || `${sourceKey}-${uid(`${title}|${published}`)}`, rawSourceId: rawId, cve, title, description, category: source.official ? source.category : classifyNews(`${title} ${description}`,source.category), publishedAt: published, updatedAt: updated, status: source.official ? 'Officially Disclosed' : 'Reported', confidence: source.official ? 'Verified / Official' : 'Reported', tags: [source.name,...new Set(cves.map(value => value.toUpperCase()))], sourceUrl: link },sourceKey,fetchedAt);
+			}).filter(item => item.title);
+		}
+
+		function correlationKey(event) {
+			if (event.cve) return `cve:${event.cve.toUpperCase()}`;
+			if (event.rawSourceId) return `${event.sourceKey}:${event.rawSourceId}`;
+			if (event.sourceUrl) return `url:${event.sourceUrl.toLowerCase()}`;
+			return `fingerprint:${uid(`${event.category}|${event.title.toLowerCase()}|${event.vendor.toLowerCase()}|${event.product.toLowerCase()}`)}`;
+		}
+
+		function mergeRecords(existing, incoming) {
+			const sources = [...(existing.sources || [])];
+			for (const source of incoming.sources || []) if (!sources.some(item => item.name === source.name && item.url === source.url)) sources.push(source);
+			const prefer = key => incoming[key] !== '' && incoming[key] != null && incoming[key] !== 'Unknown' ? incoming[key] : existing[key];
+			const existingOfficial = existing.confidence === 'Verified / Official'; const incomingOfficial = incoming.confidence === 'Verified / Official';
+			const trusted = incomingOfficial || !existingOfficial ? incoming : existing;
+			return { ...existing, ...incoming, id: existing.id, source: sources.map(item => item.name).join(', '), sourceUrl: trusted.sourceUrl, sources, category: trusted.category, confidence: trusted.confidence, status: trusted.status, firstSeenByDashboard: existing.firstSeenByDashboard, lastSeenByDashboard: incoming.fetchedAt, title: prefer('title'), description: prefer('description'), severity: prefer('severity'), cvss: prefer('cvss'), cwe: prefer('cwe'), vendor: prefer('vendor'), product: prefer('product'), location: prefer('location'), country: prefer('country'), region: prefer('region'), latitude: Number.isFinite(incoming.latitude) ? incoming.latitude : existing.latitude ?? null, longitude: Number.isFinite(incoming.longitude) ? incoming.longitude : existing.longitude ?? null, publishedAt: existing.publishedAt || incoming.publishedAt, knownExploited: existing.knownExploited || incoming.knownExploited, tags: [...new Set([...(existing.tags || []), ...(incoming.tags || [])])], affectedVersions: [...new Set([...(existing.affectedVersions || []), ...(incoming.affectedVersions || [])])] };
+		}
+
+		function meaningfulSnapshot(event) {
+			return JSON.stringify({ title: event.title, description: event.description, severity: event.severity, cvss: event.cvss, cwe: event.cwe, vendor: event.vendor, product: event.product, updatedAt: event.updatedAt, knownExploited: event.knownExploited, dueDate: event.dueDate, ransomwareUse: event.ransomwareUse });
+		}
+
+		async function persistIncoming(incoming) {
+			const map = new Map(state.events.map(item => [correlationKey(item), item])); const changed = []; const versions = []; let duplicates = 0;
+			for (const record of incoming) {
+				const key = correlationKey(record); const previous = map.get(key);
+				if (previous) {
+					duplicates++;
+					const merged = mergeRecords(previous, record);
+					if (meaningfulSnapshot(previous) !== meaningfulSnapshot(merged)) versions.push({ versionId: `${previous.id}:${Date.now()}:${uid(meaningfulSnapshot(previous))}`, eventId: previous.id, capturedAt: record.fetchedAt, snapshot: previous });
+					map.set(key, merged); changed.push(merged);
+				} else { record.id = key; map.set(key, record); changed.push(record); }
+			}
+			await putMany('events', changed); await putMany('eventVersions', versions);
+			await Promise.all([
+				putMany('vulnerabilities',changed.filter(item => item.cve)),
+				putMany('incidents',changed.filter(item => item.category === 'Incident')),
+				putMany('advisories',changed.filter(item => item.category === 'Security Advisory')),
+				putMany('threatIndicators',changed.filter(item => ['IOC','Malware','Threat Actor','Ransomware'].includes(item.category)))
+			]);
+			state.events = [...map.values()]; state.duplicateCount += duplicates;
+			return { added: incoming.length - duplicates, updated: duplicates, versions: versions.length };
+		}
+
+		async function fetchSource(key, force = false) {
+			const source = SOURCES[key]; const started = new Date().toISOString(); const controller = new AbortController(); const timeout = setTimeout(() => controller.abort(), 25000);
+			try {
+				const previousHealth = state.health[key];
+				if (!force && source.minIntervalMs && safeDate(previousHealth?.lastSuccess)?.getTime() > Date.now() - source.minIntervalMs) return { records: [], health: previousHealth, cached: true };
+				let endpoint = source.endpoint;
+				if (key === 'nvd') { const end = new Date(); const start = new Date(end.getTime() - 24 * 60 * 60 * 1000); endpoint += `?lastModStartDate=${encodeURIComponent(start.toISOString())}&lastModEndDate=${encodeURIComponent(end.toISOString())}&resultsPerPage=2000`; }
+				const response = await fetch(endpoint, { headers: { Accept: source.type === 'feed' ? 'application/rss+xml, application/atom+xml, application/xml, text/xml' : 'application/json' }, signal: controller.signal });
+				if (!response.ok) throw Object.assign(new Error(`HTTP ${response.status}`), { status: response.status });
+				const payload = source.type === 'feed' ? await response.text() : await response.json();
+				const records = source.adapter === 'nvd' ? parseNvd(payload, started) : source.adapter === 'cisaKev' ? parseCisaKev(payload, started) : parseRss(payload,key,started);
+				const health = { id: key, name: source.name, region: source.region, status: 'available', lastSuccess: started, lastFailure: state.health[key]?.lastFailure || '', records: records.length, httpStatus: response.status, error: '', nextRefresh: state.nextAt ? new Date(state.nextAt).toISOString() : '' };
+				state.health[key] = health; await putMany('sources', [health]); return { records, health };
+			} catch (error) {
+				const detail = error.name === 'AbortError' ? 'Request timed out' : error instanceof TypeError ? 'Browser request blocked by network or CORS policy' : clean(error.message) || 'Request failed';
+				const health = { id: key, name: source.name, region: source.region, status: 'failed', lastSuccess: state.health[key]?.lastSuccess || '', lastFailure: started, records: 0, httpStatus: error.status || '', error: detail, nextRefresh: state.nextAt ? new Date(state.nextAt).toISOString() : '' };
+				state.health[key] = health; await putMany('sources', [health]); return { records: [], health };
+			} finally { clearTimeout(timeout); }
+		}
+
+		async function refreshAll(force = false) {
+			if (state.refreshing) return;
+			state.refreshing = true; byId('refreshButton').disabled = true; byId('refreshButton').textContent = '↻ REFRESHING';
+			const enabled = Object.keys(SOURCES).filter(key => SOURCES[key].enabled); const startedAt = new Date().toISOString();
+			const sourceStates = new Map(enabled.map(key => [key,{ name: SOURCES[key].name, state: 'connecting' }])); let completedSources = 0;
+			renderInit([...sourceStates.values()],1,'Connecting to public sources');
+			const results = await Promise.all(enabled.map(async key => {
+				const result = await fetchSource(key,force); completedSources++; sourceStates.set(key,{ name: SOURCES[key].name, state: result.health.status });
+				renderInit([...sourceStates.values()],Math.max(1,Math.round(completedSources / enabled.length * 90)),`Sources completed: ${completedSources} / ${enabled.length}`); return result;
+			})); const records = results.flatMap(result => result.records);
+			renderInit([...sourceStates.values()],92,'Normalizing and correlating records');
+			const stats = await persistIncoming(records); const successful = results.filter(result => result.health.status === 'available').length;
+			renderInit([...sourceStates.values()],98,'Saving refresh history');
+			const completedAt = new Date().toISOString();
+			await addRefresh({ startedAt, completedAt, successfulSources: successful, attemptedSources: enabled.length, recordsRetrieved: records.length, ...stats });
+			state.refreshes = await storeAll('refreshHistory'); state.refreshing = false; byId('refreshButton').disabled = false; byId('refreshButton').textContent = '↻ REFRESH NOW';
+			scheduleRefresh(); renderAll(); renderInit([...sourceStates.values()],100,'Dashboard ready');
+			setTimeout(() => byId('initOverlay').classList.add('hidden'), 650);
+		}
+
+		function renderInit(items, progress = 1, stage = 'Loading historical records') {
+			const boundedProgress = Math.max(1,Math.min(100,Math.round(progress))); byId('initProgress').value = boundedProgress; byId('initProgress').textContent = `${boundedProgress}%`; byId('initPercent').textContent = `${boundedProgress}%`; byId('initStage').textContent = stage;
+			const list = byId('initList'); list.replaceChildren();
+			if (!items.length) { const line = document.createElement('div'); line.className = 'init-line'; addText(line, 'span', 'Loading historical records'); addText(line, 'span', 'CONNECTING', 'connecting'); list.appendChild(line); return; }
+			for (const item of items) { const line = document.createElement('div'); line.className = 'init-line'; addText(line, 'span', item.name); const label = item.state === 'available' ? 'CONNECTED' : item.state === 'failed' ? 'UNAVAILABLE' : 'CONNECTING'; addText(line, 'span', label, item.state); list.appendChild(line); }
+		}
+
+		function scheduleRefresh() {
+			clearInterval(state.timer); const interval = Number(byId('refreshInterval').value); state.nextAt = interval ? Date.now() + interval : 0;
+			if (interval) state.timer = setInterval(() => refreshAll(false), interval);
+		}
+
+		function sourceTimestamp(event) { return event.updatedAt || event.publishedAt || event.observedAt || event.discoveredAt || event.fetchedAt; }
+		function relativeTime(value) { const date = safeDate(value); if (!date) return 'Not available'; const seconds = Math.round((date.getTime() - Date.now()) / 1000); const formatter = new Intl.RelativeTimeFormat(undefined, { numeric: 'auto' }); const units = [['year',31536000],['month',2592000],['day',86400],['hour',3600],['minute',60]]; for (const [unit, size] of units) if (Math.abs(seconds) >= size) return formatter.format(Math.round(seconds / size), unit); return formatter.format(seconds, 'second'); }
+		function isToday(value) { const date = safeDate(value); return date ? todayKey(date) === todayKey(new Date()) : false; }
+
+		function getFiltered() {
+			const query = byId('searchInput').value.trim().toLowerCase(); const category = byId('categoryFilter').value; const severity = byId('severityFilter').value; const source = byId('sourceFilter').value; const dateFilter = byId('dateFilter').value; const region = byId('regionFilter').value; const now = Date.now();
+			return state.events.filter(event => {
+				const timestamp = eventTime(event); const haystack = [event.cve,event.title,event.vendor,event.product,event.malwareFamily,event.threatActor,event.source,event.description,event.location,event.country,event.region,...(event.tags || [])].join(' ').toLowerCase();
+				if (query && !haystack.includes(query)) return false; if (category && event.category !== category) return false; if (severity && event.severity !== severity) return false; if (source && !(event.sources || []).some(item => item.name === source)) return false; if (region && event.region !== region && event.country !== region) return false;
+				if (state.selectedDay && todayKey(new Date(timestamp)) !== state.selectedDay) return false;
+				if (dateFilter === 'hour' && timestamp < now - 3600000) return false; if (dateFilter === 'today' && !isToday(timestamp)) return false; if (['7','30'].includes(dateFilter) && timestamp < now - Number(dateFilter) * 86400000) return false;
+				if (dateFilter === 'custom') { const from = safeDate(byId('dateFrom').value); const toValue = byId('dateTo').value; const to = safeDate(toValue ? `${toValue}T23:59:59.999` : ''); if (from && timestamp < from.getTime()) return false; if (to && timestamp > to.getTime()) return false; }
+				return true;
+			}).sort((a, b) => eventTime(b) - eventTime(a));
+		}
+
+		function renderFeedItem(event) {
+			const article = document.createElement('article'); article.className = 'feed-item';
+			const bar = document.createElement('div'); bar.className = `severity-bar ${event.severity.toLowerCase()}`; article.appendChild(bar);
+			const body = document.createElement('div'); const top = document.createElement('div'); top.className = 'item-top';
+			addText(top, 'span', event.severity, `badge ${event.severity.toLowerCase()}`); addText(top, 'span', event.category, 'badge advisory'); addText(top, 'span', event.confidence || 'Limited information', `badge ${event.confidence?.toLowerCase().includes('official') ? 'official' : 'reported'}`); body.appendChild(top);
+			addText(body, 'h4', event.title || event.cve || 'Untitled source record'); if (event.description) addText(body, 'p', event.description);
+			const meta = document.createElement('div'); meta.className = 'meta'; addText(meta, 'span', `SOURCE: ${event.source}`); addText(meta, 'span', `PUBLISHED: ${relativeTime(event.publishedAt)}`); addText(meta, 'span', `UPDATED: ${displayDate(event.updatedAt)}`); addText(meta, 'span', `FETCHED: ${displayDate(event.fetchedAt)}`); if (event.category === 'Incident' || event.location || event.country || event.region) addText(meta, 'span', `LOCATION: ${event.location || event.country || event.region || 'Not available'}`); if (event.cvss !== '') addText(meta, 'span', `CVSS: ${event.cvss}`); addText(meta, 'span', `CORRELATED SOURCES: ${(event.sources || []).length}`); body.appendChild(meta); article.appendChild(body);
+			const link = document.createElement('a'); link.className = 'source-link'; link.href = event.sourceUrl; link.target = '_blank'; link.rel = 'noopener noreferrer'; link.textContent = 'SOURCE ↗'; article.appendChild(link); return article;
+		}
+
+		function renderFeed() {
+			state.filtered = getFiltered(); const pageCount = Math.max(1, Math.ceil(state.filtered.length / PAGE_SIZE)); state.feedPage = Math.min(state.feedPage, pageCount - 1);
+			const feed = byId('feed'); feed.replaceChildren(); const page = state.filtered.slice(state.feedPage * PAGE_SIZE, (state.feedPage + 1) * PAGE_SIZE);
+			if (!page.length) addText(feed, 'div', 'No retained records match these filters. Refresh to query available public sources.', 'empty'); else page.forEach(event => feed.appendChild(renderFeedItem(event)));
+			byId('feedPage').textContent = `Page ${state.feedPage + 1} of ${pageCount} · ${state.filtered.length.toLocaleString()} records`; byId('feedPrev').disabled = state.feedPage === 0; byId('feedNext').disabled = state.feedPage >= pageCount - 1;
+		}
+
+		function renderKpis() {
+			const today = state.events.filter(event => isToday(event.firstSeenByDashboard)).length; const critical = state.events.filter(event => event.cve && event.severity === 'Critical').length; const kev = state.events.filter(event => event.knownExploited).length; const incidents = state.events.filter(event => ['Incident','Data Breach','Ransomware'].includes(event.category)).length;
+			const enabled = Object.values(SOURCES).filter(source => source.enabled).length; const active = Object.values(state.health).filter(source => source.status === 'available').length;
+			byId('kpiToday').textContent = today.toLocaleString(); byId('kpiCritical').textContent = critical.toLocaleString(); byId('kpiKev').textContent = kev.toLocaleString(); byId('kpiIncidents').textContent = incidents.toLocaleString(); byId('kpiSources').textContent = `${active} / ${enabled}`; byId('sourceCount').textContent = `${active} / ${enabled} sources`;
+		}
+
+		function renderStatus() {
+			const enabled = Object.values(SOURCES).filter(source => source.enabled).length; const active = Object.values(state.health).filter(source => source.status === 'available').length; const last = [...state.refreshes].reverse().find(item => item.successfulSources > 0); const online = navigator.onLine;
+			const mode = !online || (state.refreshes.length && active === 0) ? 'offline' : active === enabled && enabled ? 'live' : active ? 'partial' : 'partial';
+			byId('statusDot').className = `status-dot ${mode}`; byId('liveStatus').textContent = mode.toUpperCase(); byId('offlineNotice').classList.toggle('show', !online || mode === 'offline');
+			const next = state.nextAt ? ` · Next refresh ${displayDate(state.nextAt)}` : ' · Manual refresh'; byId('syncStatus').textContent = `Last successful refresh: ${last ? displayDate(last.completedAt) : 'Not available'}${next}`; byId('footerSync').textContent = last ? displayDate(last.completedAt) : 'Not available';
+		}
+
+		function renderSources() {
+			const rows = byId('sourceRows'); const mini = byId('sourceHealthMini'); rows.replaceChildren(); mini.replaceChildren();
+			Object.entries(SOURCES).forEach(([key, source], index) => {
+				const health = state.health[key]; const status = !source.enabled ? 'Not configured' : health?.status === 'available' ? 'Available' : health?.status === 'failed' ? 'Unavailable' : 'Not checked';
+				const row = document.createElement('tr'); [source.name,source.region,status,displayDate(health?.lastSuccess),displayDate(health?.lastFailure),health?.records?.toLocaleString() || '0',health?.error || health?.httpStatus || source.reason || 'Not available'].forEach(value => addText(row, 'td', String(value))); rows.appendChild(row);
+				if (index < 6 || source.enabled) { const item = document.createElement('div'); item.className = 'source-row'; const left = document.createElement('div'); addText(left, 'strong', source.name); addText(left, 'span', health?.error || source.reason || `Last success: ${displayDate(health?.lastSuccess)}`, 'source-detail'); item.appendChild(left); addText(item, 'span', status, `health ${health?.status === 'available' ? 'ok' : health?.status === 'failed' ? 'fail' : 'idle'}`); mini.appendChild(item); }
+			});
+		}
+
+		function renderAlerts() {
+			const alerts = byId('alerts'); alerts.replaceChildren(); const critical = byId('alertCritical').checked; const kev = byId('alertKev').checked; const zeroDay = byId('alertZeroDay').checked; const terms = byId('alertTerms').value.toLowerCase().split(',').map(value => value.trim()).filter(Boolean);
+			const matches = state.events.filter(event => { const rule = (critical && event.severity === 'Critical') || (kev && event.knownExploited) || (zeroDay && event.tags?.some(tag => tag.toLowerCase().includes('zero-day'))); const text = `${event.vendor} ${event.product}`.toLowerCase(); return rule && (!terms.length || terms.some(term => text.includes(term))); }).sort((a,b) => eventTime(b)-eventTime(a)).slice(0,6);
+			if (!matches.length) { addText(alerts, 'div', 'No retained records match enabled alert rules.', 'empty'); return; }
+			matches.forEach(event => { const row = document.createElement('div'); row.className = 'alert-row'; addText(row, 'strong', event.cve || event.title); addText(row, 'small', `${event.knownExploited ? 'KNOWN EXPLOITED' : event.severity} · ${event.source}`); alerts.appendChild(row); });
+		}
+
+		function renderVulnerabilities() {
+			const vulnerabilities = state.events.filter(event => event.cve).sort((a,b) => eventTime(b)-eventTime(a)); const pages = Math.max(1, Math.ceil(vulnerabilities.length / PAGE_SIZE)); state.vulnPage = Math.min(state.vulnPage, pages - 1); const rows = byId('vulnerabilityRows'); rows.replaceChildren();
+			vulnerabilities.slice(state.vulnPage * PAGE_SIZE, (state.vulnPage + 1) * PAGE_SIZE).forEach(event => { const row = document.createElement('tr'); addText(row,'td',textValue(event.cve)); addText(row,'td',`${event.severity} / ${event.cvss !== '' ? event.cvss : 'Not available'}`); addText(row,'td',`${textValue(event.vendor)} / ${textValue(event.product)}`); addText(row,'td',`${displayDate(event.publishedAt)} / ${displayDate(event.updatedAt)}`); addText(row,'td',event.knownExploited ? 'YES — CISA KEV' : 'Not indicated by available sources'); const cell = document.createElement('td'); (event.sources || []).forEach((source,index) => { const link = document.createElement('a'); link.href = source.url; link.target = '_blank'; link.rel = 'noopener noreferrer'; link.textContent = source.name; cell.appendChild(link); if (index < event.sources.length - 1) cell.appendChild(document.createTextNode(', ')); }); row.appendChild(cell); rows.appendChild(row); });
+			if (!vulnerabilities.length) { const row = document.createElement('tr'); const cell = addText(row,'td','No vulnerability records stored.'); cell.colSpan = 6; rows.appendChild(row); }
+			byId('vulnPage').textContent = `Page ${state.vulnPage + 1} of ${pages} · ${vulnerabilities.length.toLocaleString()} CVEs`; byId('vulnPrev').disabled = state.vulnPage === 0; byId('vulnNext').disabled = state.vulnPage >= pages - 1;
+		}
+
+		function renderSpecialFeeds() {
+			const kev = byId('kevFeed'); kev.replaceChildren(); const events = state.events.filter(event => event.knownExploited).sort((a,b) => eventTime(b)-eventTime(a)).slice(0,20); if (!events.length) addText(kev,'div','No CISA KEV records are stored.','empty'); else events.forEach(event => kev.appendChild(renderFeedItem(event)));
+			const incidentFeed = byId('incidentFeed'); const incidents = state.events.filter(event => ['Incident','Data Breach','Ransomware'].includes(event.category)).sort((a,b) => eventTime(b)-eventTime(a)).slice(0,20); incidentFeed.replaceChildren(); if (!incidents.length) addText(incidentFeed,'div','No incident source has supplied records.','empty'); else incidents.forEach(event => incidentFeed.appendChild(renderFeedItem(event)));
+			[['advisoryFeed','Security Advisory','No advisory source has supplied records.']].forEach(([id,category,message]) => { const container = byId(id); const matches = state.events.filter(event => event.category === category).sort((a,b) => eventTime(b)-eventTime(a)).slice(0,20); container.replaceChildren(); if (!matches.length) addText(container,'div',message,'empty'); else matches.forEach(event => container.appendChild(renderFeedItem(event))); });
+		}
+
+		function renderTimeline() {
+			const counts = new Map(); state.events.forEach(event => { const date = safeDate(sourceTimestamp(event)); if (date) { const key = todayKey(date); counts.set(key, (counts.get(key) || 0) + 1); } });
+			const timeline = byId('timelineDays'); timeline.replaceChildren(); [...counts.entries()].sort((a,b) => a[0].localeCompare(b[0])).slice(-30).forEach(([day,count]) => { const button = document.createElement('button'); button.className = `day ${state.selectedDay === day ? 'active' : ''}`; addText(button,'small',new Date(`${day}T12:00:00`).toLocaleDateString([], { month:'short', day:'numeric' }).toUpperCase()); addText(button,'strong',count.toLocaleString()); addText(button,'small','events'); button.addEventListener('click', () => { state.selectedDay = day; state.feedPage = 0; renderTimeline(); renderFeed(); switchTab('live','live-feed'); }); timeline.appendChild(button); });
+			if (!counts.size) addText(timeline,'div','No historical records stored yet.','empty');
+		}
+
+		function renderQuality() {
+			const rows = byId('qualityRows'); rows.replaceChildren(); const available = Object.values(state.health).filter(item => item.status === 'available').length; const enabled = Object.values(SOURCES).filter(item => item.enabled).length; const oldest = state.events.reduce((old,event) => { const date = safeDate(event.firstSeenByDashboard); return date && (!old || date < old) ? date : old; }, null); const last = [...state.refreshes].reverse().find(item => item.successfulSources > 0);
+			[['Records collected',state.events.length.toLocaleString()],['New records today',state.events.filter(event => isToday(event.firstSeenByDashboard)).length.toLocaleString()],['Duplicates correlated',state.refreshes.reduce((sum,item) => sum + (item.updated || 0),0).toLocaleString()],['Sources available',`${available} / ${enabled}`],['Last successful refresh',last ? displayDate(last.completedAt) : 'Not available'],['Oldest stored record',oldest ? displayDate(oldest) : 'Not available']].forEach(([label,value]) => { const row = document.createElement('div'); row.className = 'quality-row'; addText(row,'span',label); addText(row,'strong',value,'mono'); rows.appendChild(row); });
+		}
+
+		function drawMap() {
+			const canvas = byId('mapCanvas'); const context = canvas.getContext('2d'); context.clearRect(0,0,canvas.width,canvas.height); context.strokeStyle = 'rgba(84,211,155,.18)'; context.lineWidth = 2; context.setLineDash([8,8]); context.strokeRect(35,35,canvas.width-70,canvas.height-70); context.setLineDash([]);
+			const geographic = state.events.filter(event => Number.isFinite(event.latitude) && Number.isFinite(event.longitude)); byId('mapNote').style.display = geographic.length ? 'none' : 'block';
+			const regionList = byId('regionList'); regionList.replaceChildren();
+			if (!geographic.length) addText(regionList,'div','No source-verified geographic records available.','empty');
+			else geographic.slice(0,50).forEach(event => { const row = document.createElement('div'); row.className = 'source-row'; addText(row,'span',event.title || event.cve); addText(row,'strong',event.location || event.country || event.region || `${event.latitude}, ${event.longitude}`); regionList.appendChild(row); });
+			geographic.forEach(event => { const x = (event.longitude + 180) / 360 * canvas.width; const y = (90 - event.latitude) / 180 * canvas.height; context.fillStyle = '#ff625f'; context.beginPath(); context.arc(x,y,5,0,Math.PI*2); context.fill(); });
+		}
+
+		function populateFilters() {
+			const setOptions = (select, values, first) => { const selected = select.value; select.replaceChildren(); const option = document.createElement('option'); option.value = ''; option.textContent = first; select.appendChild(option); values.forEach(value => { const item = document.createElement('option'); item.value = value; item.textContent = value; select.appendChild(item); }); select.value = selected; };
+			const categories = ['Vulnerability','Exploited Vulnerability','Security Advisory','Security News','Incident','Malware','IOC','Threat Actor','Ransomware','Data Breach','Zero-Day'];
+			setOptions(byId('categoryFilter'), [...new Set([...categories,...state.events.map(item => item.category).filter(Boolean)])], 'All categories'); setOptions(byId('sourceFilter'), [...new Set(state.events.flatMap(item => (item.sources || []).map(source => source.name)))].sort(), 'All sources'); setOptions(byId('regionFilter'), [...new Set(state.events.flatMap(item => [item.country,item.region]).filter(Boolean))].sort(), 'All countries / regions');
+		}
+
+		function renderAll() { populateFilters(); renderStatus(); renderKpis(); renderFeed(); renderAlerts(); renderSources(); renderVulnerabilities(); renderSpecialFeeds(); renderTimeline(); renderQuality(); drawMap(); }
+
+		function exportData(format, records) {
+			const fields = ['id','source','sourceUrl','category','title','description','severity','confidence','status','cve','cwe','cvss','vendor','product','affectedVersions','threatActor','malwareFamily','location','country','region','latitude','longitude','publishedAt','discoveredAt','observedAt','updatedAt','fetchedAt','firstSeenByDashboard','lastSeenByDashboard','tags','knownExploited','dueDate','ransomwareUse'];
+			let content; let type; let extension;
+			if (format === 'json') { content = JSON.stringify(records,null,2); type = 'application/json'; extension = 'json'; }
+			else { const quote = value => `"${String(Array.isArray(value) ? value.join('|') : value ?? '').replaceAll('"','""')}"`; content = [fields.join(','), ...records.map(record => fields.map(field => quote(record[field])).join(','))].join('\n'); type = 'text/csv'; extension = 'csv'; }
+			const blob = new Blob([content], { type }); const url = URL.createObjectURL(blob); const link = document.createElement('a'); link.href = url; link.download = `cyber-intelligence-${new Date().toISOString().slice(0,10)}.${extension}`; link.click(); setTimeout(() => URL.revokeObjectURL(url),1000);
+		}
+
+		function switchTab(tabId, targetId = '', updateHash = true) {
+			if (!TAB_TARGETS[tabId]) tabId = 'live';
+			document.querySelectorAll('.dashboard-tab').forEach(button => { const active = button.dataset.tab === tabId; button.classList.toggle('active',active); button.setAttribute('aria-selected',String(active)); button.tabIndex = active ? 0 : -1; });
+			document.querySelectorAll('.tab-panel').forEach(panel => panel.classList.toggle('active',panel.dataset.tabPanel === tabId));
+			sessionStorage.setItem('cyberDashboardTab',tabId);
+			const destination = targetId || TAB_TARGETS[tabId];
+			document.querySelectorAll('#nav a').forEach(link => link.classList.toggle('active',link.getAttribute('href') === `#${destination}`));
+			if (updateHash) history.replaceState(null,'',`#${destination}`);
+			if (targetId) requestAnimationFrame(() => byId(targetId)?.scrollIntoView({ behavior: 'smooth', block: 'start' }));
+		}
+
+		function bindEvents() {
+			['searchInput','categoryFilter','severityFilter','sourceFilter','regionFilter','dateFrom','dateTo'].forEach(id => byId(id).addEventListener(id === 'searchInput' ? 'input' : 'change', () => { state.feedPage = 0; renderFeed(); }));
+			byId('dateFilter').addEventListener('change', () => { byId('customDates').classList.toggle('show',byId('dateFilter').value === 'custom'); state.feedPage = 0; renderFeed(); });
+			byId('refreshButton').addEventListener('click', () => refreshAll(true)); byId('feedPrev').addEventListener('click', () => { state.feedPage--; renderFeed(); }); byId('feedNext').addEventListener('click', () => { state.feedPage++; renderFeed(); }); byId('vulnPrev').addEventListener('click', () => { state.vulnPage--; renderVulnerabilities(); }); byId('vulnNext').addEventListener('click', () => { state.vulnPage++; renderVulnerabilities(); });
+			byId('refreshInterval').addEventListener('change', () => { byId('settingsInterval').value = byId('refreshInterval').value; scheduleRefresh(); renderStatus(); }); byId('settingsInterval').addEventListener('change', () => { byId('refreshInterval').value = byId('settingsInterval').value; scheduleRefresh(); renderStatus(); });
+			byId('alertCritical').addEventListener('change', renderAlerts); byId('alertKev').addEventListener('change', renderAlerts); byId('alertZeroDay').addEventListener('change', renderAlerts); byId('alertTerms').addEventListener('input',renderAlerts); byId('clearTimeline').addEventListener('click', () => { state.selectedDay = ''; renderTimeline(); renderFeed(); });
+			byId('exportFiltered').addEventListener('click', () => exportData('csv',state.filtered)); byId('exportJson').addEventListener('click', () => exportData('json',state.filtered)); byId('exportAllCsv').addEventListener('click', () => exportData('csv',state.events)); byId('exportAllJson').addEventListener('click', () => exportData('json',state.events));
+			byId('dashboardTabs').addEventListener('click', event => { const button = event.target.closest('.dashboard-tab'); if (button) switchTab(button.dataset.tab); });
+			byId('dashboardTabs').addEventListener('keydown', event => { if (!['ArrowLeft','ArrowRight','Home','End'].includes(event.key)) return; const buttons = [...document.querySelectorAll('.dashboard-tab')]; const current = buttons.indexOf(document.activeElement); const next = event.key === 'Home' ? 0 : event.key === 'End' ? buttons.length - 1 : (current + (event.key === 'ArrowRight' ? 1 : -1) + buttons.length) % buttons.length; event.preventDefault(); buttons[next].focus(); switchTab(buttons[next].dataset.tab); });
+			document.addEventListener('click', event => { const link = event.target.closest('a[href^="#"]'); if (!link) return; const targetId = link.getAttribute('href').slice(1); const tabId = SECTION_TABS[targetId]; if (!tabId) return; event.preventDefault(); switchTab(tabId,targetId); });
+			byId('menuButton').addEventListener('click', () => byId('sidebar').classList.toggle('open')); byId('nav').addEventListener('click', event => { if (event.target.closest('a')) byId('sidebar').classList.remove('open'); });
+			window.addEventListener('online', () => { renderStatus(); refreshAll(true); }); window.addEventListener('offline', renderStatus); setInterval(renderStatus,30000);
+			const initialSection = location.hash.slice(1); switchTab(SECTION_TABS[initialSection] || sessionStorage.getItem('cyberDashboardTab') || 'live','',false);
+		}
+
+		async function initialize() {
+			bindEvents();
+			try { state.db = await openDatabase(); [state.events, state.refreshes] = await Promise.all([storeAll('events'),storeAll('refreshHistory')]); const storedHealth = await storeAll('sources'); state.health = Object.fromEntries(storedHealth.map(item => [item.id,item])); renderAll(); await refreshAll(); }
+			catch (error) { console.error(error); byId('initList').replaceChildren(); addText(byId('initList'),'div',`Local database initialization failed: ${error.message}`,'health fail'); renderAll(); setTimeout(() => byId('initOverlay').classList.add('hidden'),1200); }
+		}
+
+		initialize();
+	</script>
+</body>
+</html>
